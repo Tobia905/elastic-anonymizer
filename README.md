@@ -121,19 +121,22 @@ docker-compose up
 ### Contribute ###
 
 If you want to contribute to the project, feel free. The only thing we ask, is to follow these simple steps:
-1. Clone the repository:
+
+1. Fork the repository.
+
+2. Clone the repository:
 ```{git}
 git clone https://github.com/Tobia905/elastic-anonymizer.git
 ```
-2. Move to the repo:
+3. Move to the repo:
 ```{bash}
 cd /PATH_TO_REPO
 ```
-3. Create a new branch:
+4. Create a new branch:
 ```{git}
 # for a feature
 git checkout -b feature/YOUR_FEATURE
 # for solving a bug
 git checkout -b bug/YOUR_SOLUTION
 ```
-4. Push your branch and open a Pull Request.
+5. Push your branch and open a Pull Request.
