@@ -3,6 +3,7 @@ import re
 import os
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -81,15 +82,23 @@ class ElasticAnonymizer:
     """
     def __init__(
         self: Self, 
-        ner_model: str = Config.NER_MODEL, 
         ner_pipeline_name: str = "ner",
+        ner_model: Optional[str] = None,
         faker_random_state: int = 42,
         num_threads_anonimize: int = -1,
         faking_locale: str = "it_IT",
         w2v_model_path: Optional[str] = None,
         use_pretrained_anon_state: bool = True
     ):
+        if faking_locale not in ["it_IT", "en_US", "en_GB"]:
+            raise ValueError(
+                "The model pipelines are only available for italian and "
+                "english. Please select from ('it_IT', 'en_US', 'en_GB')."
+            )
         
+        self.language = (
+            "italian" if faking_locale not in ["en_US", "en_GB"] else "english"
+        )
         # kind of anonymization (by now, only faking is available)
         self.kind = "faker" 
         self.anon_state_name = f"{self.kind}_anonimization_state.pickle"
@@ -120,9 +129,20 @@ class ElasticAnonymizer:
             for ent, func in zip(self.selectors, anon_steps)
         }
         # initialize the NER pipeline
-        self.ner_pipeline = pipeline(
-            ner_pipeline_name, model=ner_model, aggregation_strategy="simple"
-        )
+        if faking_locale == "it_IT":
+            self.ner_pipeline = pipeline(
+                ner_pipeline_name, 
+                model=ner_model or Config.ITA_NER_MODEL, 
+                aggregation_strategy="simple"
+            )
+
+        else:
+            self.ner_pipeline = pipeline(
+                ner_pipeline_name, 
+                model=ner_model or Config.ENG_NER_MODEL, 
+                aggregation_strategy="simple"
+            )
+
         self.num_threads_anonimize = num_threads_anonimize
         # import the fast text model if a pre-trained version is available
         self.w2v_model = (
@@ -150,7 +170,7 @@ class ElasticAnonymizer:
             # get all the fakers in the anonimization region
             best_fakers = (
                 sim_df
-                .query("clust==-1 and sint>0.75 and sem>0.8")
+                .query("clust==-1 and sint>0.80 and sem>0.8")
                 .sort_values(by="sint", ascending=False)
             )
             # get the faking associated with the most similar one
@@ -204,7 +224,7 @@ class ElasticAnonymizer:
         # classify the word as belonging to the anonimization region or not
         return self.classify(sim_df)
 
-    # NOTE: the show_ner parameter could be deleted, i don't think that 
+    # NOTE: the show_ner parameter could be deleted, I don't think that 
     # texts will be displayed when running the anonymization in parallel
     def _anonymize(
         self: Self, 
@@ -323,10 +343,12 @@ class ElasticAnonymizer:
                 pd.Series(
                     [sentence.page_content for sentence in sentences]
                 ),
+                stopwords_language=self.language,
                 stop=1
             )
             .tolist()
         )
+        pipeline_results = self.filter_recognition_noise(pipeline_results)
         # populate the anonymization state if this hasn't been done yet
         if not self.use_pretrained_anon_state and not self.w2v_model:
             self.populate_anon_state(
@@ -397,9 +419,9 @@ class ElasticAnonymizer:
 
         return " " + anon + " "
 
-    def initialize_anon_state(self):
-        if self.is_saved_anon_state and self.use_pretrained_anon_state:
-            self.import_anon_state()
+    def initialize_anon_state(self, save_path: Union[Path, str] = Config.ASSETS_PATH):
+        if self.is_saved_anon_state(save_path) and self.use_pretrained_anon_state:
+            self.import_anon_state(path=save_path)
 
         else:
             self.anon_state = {}
@@ -463,7 +485,9 @@ class ElasticAnonymizer:
             pipeline_results
         )
         # lower, tokenize and process the corpus to pass to FastText
-        sentences = process_pipeline(pd.Series(sentences))
+        sentences = process_pipeline(
+            pd.Series(sentences), stopwords_language=self.language
+        )
         self.w2v_model = FastText(
             sentences=sentences, 
             min_count=w2v_min_count, 
@@ -472,7 +496,6 @@ class ElasticAnonymizer:
             **w2v_kwargs
         )
 
-        # sorry but i couldn't remember what is this for, you have to figure it out ;)
         word_types = word_types[word_types.words.apply(len) > 1]
  
         # anon_state is empty, initialize it with all None
@@ -500,11 +523,16 @@ class ElasticAnonymizer:
             pickle.dump(self.anon_state_regex, file)
 
     @staticmethod
-    def export_anon_df(df: pd.DataFrame):
+    def export_anon_df(
+        df: pd.DataFrame, 
+        save_path: Union[Path, str] = Config.ANON_DOCS_PATH
+    ):
+        save_path = ElasticAnonymizer._check_is_path(save_path)
         filename = f"anonimized_docs_{get_current_time()}.csv"
         df.to_csv((Config.ANON_DOCS_PATH / filename).as_posix(), index=None)
 
-    def import_anon_state(self: Self, path: str = Config.ASSETS_PATH):
+    def import_anon_state(self: Self, path: Union[Path, str] = Config.ASSETS_PATH):
+        path = ElasticAnonymizer._check_is_path(path)
         with open((path / self.anon_state_name), "rb") as file:
             self.anon_state = pickle.load(file)
 
@@ -536,17 +564,18 @@ class ElasticAnonymizer:
         similarities["clust"] = pred
         return similarities
 
-    def export_trained_embedder(self):
+    def export_trained_embedder(self, save_path: Union[Path, str] = Config.ASSETS_PATH):
+        save_path = ElasticAnonymizer._check_is_path(save_path)
         filename = f"trained_ft_{get_current_time()}.model"
-        self.w2v_model.save((Config.ASSETS_PATH / filename).as_posix())
+        self.w2v_model.save((save_path / filename).as_posix())
 
     @staticmethod
     def import_trained_embedder(path: str) -> FastText:
         return FastText.load(path)
 
-    @property
-    def is_saved_anon_state(self):
-        return self.anon_state_name in os.listdir(Config.ASSETS_PATH)
+    def is_saved_anon_state(self, save_path: Union[Path, str] = Config.ASSETS_PATH) -> bool:
+        save_path = ElasticAnonymizer._check_is_path(save_path)
+        return self.anon_state_name in os.listdir(save_path)
     
     def clean_anon_state_from_hardcoded_entities(self):
         self.anon_state = {
@@ -555,6 +584,22 @@ class ElasticAnonymizer:
                 ent not in Config.HARDCODED_TODROP and "##" not in ent
             )
         }
+
+    @staticmethod
+    def filter_recognition_noise(
+        pipeline_results: List[List[Dict[str, Union[int, str]]]]
+    ) -> List[List[Dict[str, Union[int, str]]]]:
+    
+        return [
+            [ent for ent in anon if len(ent["word"].replace("##", "")) > 1]
+            for anon in pipeline_results
+        ]
+    
+    @staticmethod
+    def _check_is_path(save_path: Union[Path, str] = Config.ANON_DOCS_PATH) -> Path:
+        return (
+            Path(save_path) if not isinstance(save_path, Path) else save_path
+        )
 
     def plot_anonimization_space(
         self: Self, 
@@ -617,8 +662,8 @@ class ElasticAnonymizer:
 
         _ = ax.grid(alpha=.3, zorder=-1)
         _ = ax.set(
-            xlabel="Syntactic Similarity", 
-            ylabel="Semantic Similarity",
+            xlabel="Semantic Similarity", 
+            ylabel="Syntactic Similarity",
             title=f"Similarity Space for {word}"
         )
     

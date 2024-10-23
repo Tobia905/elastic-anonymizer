@@ -1,38 +1,32 @@
-# NOTE: all the docstrings and comments here have been produced using chatGPT 
-# as an experiment. 
-
 import os
 from pathlib import Path
 from typing import List, Dict, Tuple, Union
 
 import pandas as pd
 import numpy as np
-import textract
+from docx import Document
 
 
 def read_word_file(path: str) -> List[str]:
     """
-    Reads all word files from a given path.
+    Reads all `.docx` files from a given path.
 
     args:
-        path (str): the path to the folder with word
-        files.
+        path (str): the path to the folder with word files.
 
     returns:
-        docs (list): list of strings representing
-        documents.
+        docs (list): list of strings representing documents.
     """
-    docs = [
-        " ".join(
-            # Split the raw text into lines and filter out any empty lines
-            filter(
-                None, 
-                # Process the document at the given path
-                textract.process(path).decode("utf-8").splitlines()
-            )
+    docs = []
+    if os.path.splitext(path)[1] == ".docx":
+        doc = Document(path)
+        full_text = []
+        for para in doc.paragraphs:
+            full_text.append(para.text.lstrip())
+
+        docs.append(
+            " ".join(full_text).lstrip().replace("\xa0", " ")
         )
-        .replace(r"\s+|\t+", ' ') 
-    ]
     return docs
 
 

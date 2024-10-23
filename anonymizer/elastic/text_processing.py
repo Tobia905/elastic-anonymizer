@@ -1,4 +1,4 @@
-from functools import reduce
+from functools import reduce, partial
 from typing import List, Union, Optional, Dict, Any
 
 import nltk
@@ -18,8 +18,8 @@ def strip_punctuation(text: pd.Series) -> pd.Series:
     return text.str.replace(puncts, "", regex=True)
 
 
-def remove_stopwords(text: pd.Series) -> pd.Series:
-    stopwords_ = stopwords.words("italian")
+def remove_stopwords(text: pd.Series, language: str) -> pd.Series:
+    stopwords_ = stopwords.words(language)
     stop_reg = r"\b(" + "|".join(stopwords_) + ")\\W"
     return text.str.replace(stop_reg, "", regex=True)
 
@@ -40,8 +40,8 @@ def double_space_replace(text: pd.Series) -> pd.Series:
     return text.str.replace(r"\s{2,}", " ", regex=True)
 
 
-def remove_stopwords(text: pd.Series) -> pd.Series:
-    stopwords_ = stopwords.words("italian")
+def remove_stopwords(text: pd.Series, language: str) -> pd.Series:
+    stopwords_ = stopwords.words(language)
     return text.apply(
         lambda x: [
             "" if string in stopwords_ else string for string in x
@@ -66,6 +66,7 @@ def postprocess(text: pd.Series) -> pd.Series:
 
 def process_pipeline(
     text: Union[pd.Series, List[str], np.ndarray], 
+    stopwords_language: str,
     stop: Optional[int] = None
 ) -> List[str]:
     """
@@ -85,13 +86,14 @@ def process_pipeline(
         pd.Series(text) 
         if not isinstance(text, pd.Series) else text
     )
+    rem_stops = partial(remove_stopwords, language=stopwords_language)
     funcs = [
         to_lower,
         remove_line_splitted,
         double_space_replace,
         splitter,
         char_replacer,
-        remove_stopwords,
+        rem_stops,
         postprocess
     ]
     funcs = funcs if not stop else funcs[:stop]

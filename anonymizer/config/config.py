@@ -17,7 +17,8 @@ class Config:
         # Partitva Iva regex
         "company_vat": re.compile(r"\b(IT)?\d{11}\b", re.IGNORECASE)
     }
-    NER_MODEL = "osiria/deberta-base-italian-uncased-ner"
+    ITA_NER_MODEL = "osiria/deberta-base-italian-uncased-ner"
+    ENG_NER_MODEL = "elastic/distilbert-base-uncased-finetuned-conll03-english"
     ASSETS_PATH = PROJECT_PATH / "assets"
     ANON_DOCS_PATH = PROJECT_PATH / "anonymized_docs"
     HARDCODED_TODROP = []

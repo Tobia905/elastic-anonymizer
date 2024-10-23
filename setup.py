@@ -27,7 +27,7 @@ if __name__ == "__main__":
         author="Tobia Tommasini, Simone Gazza",
         url="https://github.com/Tobia905/elastic-anonymizer",
         long_description_content_type="text/markdown",
-        author_email="tobiatommasini@gmail.it",
+        author_email="tobiatommasini@gmail.it, gazza.sim@gmail.com",
         classifiers=[
             "Development Status :: 2 - Pre-Alpha",
             "Programming Language :: Python :: 3 :: Only",

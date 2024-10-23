@@ -1,0 +1,14 @@
+version: '3.10'
+
+services:
+  jupyter:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebooks:/home/
+      - ./anonymizer:/home/anonymizer
+      - ./data:/home/data
+      - ./assets:/home/assets

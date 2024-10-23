@@ -71,5 +71,18 @@ cython_debug/
 data/01. Doc. Go to market
 data/02. Doc. di progetto
 
+# documents that are not inside ./example
+
+*.docx
+*.pdf
+!data/example/**/*.docx
+!data/example/**/*.pdf
+
 # Fast Text weights
 *.npy
+
+# data
+
+*.csv
+*.xlsx
+*.parquet

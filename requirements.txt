@@ -12,7 +12,7 @@ scipy==1.11.2
 transformers==4.33.2
 langchain==0.0.335
 python-dotenv==1.0.0
-textract==1.6.5
+python-docx==1.1.2
 pyzmq==25.1.2
 nltk==3.8.1
 sentence-transformers==2.2.2

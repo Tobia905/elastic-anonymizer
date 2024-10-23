@@ -142,12 +142,17 @@ def create_documents_with_metadata(
     return dcs
 
 
-def visualize_ner_on_chunk(chunk: Document, pipeline: TokenClassificationPipeline) -> None:
+def visualize_ner_on_chunk(
+    chunk: Document, 
+    pipeline: TokenClassificationPipeline,
+    stopwords_language: str = "english"
+) -> None:
     pipeline_results = pipeline(
         process_pipeline(
             pd.Series(
                 [sentence.page_content for sentence in [chunk]]
             ),
+            stopwords_language=stopwords_language,
             stop=1
         )
         .tolist()
