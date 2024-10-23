@@ -54,15 +54,15 @@ Once the entities have been recognized, the Fast Text trained and the words' emb
 ### Installation and Usage ###
 
 1. Clone the repository:
-```{git}
+```bash
 git clone https://github.com/Tobia905/elastic-anonymizer.git
 ```
 2. Run:
-```{pip}
+```bash
 pip install /PATH_TO_REPO
 ```
 3. Anonymize your documents:
-```{python}
+```python
 from langchain.text_splitter import SentenceTransformersTokenTextSplitter
 
 from anonymizer.preprocess.doc_processing import process
@@ -82,12 +82,12 @@ anon = ElasticAnonymizer(use_pretrained_anon_state=False, faking_locale="en_US")
 anon_docs = anon.anonymize(chunks, show_ner=False, epochs=100)
 ```
 4. Export your anonymized documents:
-```{python}
+```python
 # if you don't pass a PATH_TO_YOUR_FOLDER, the function will use the default argument, which is the ./anonymized_docs folder in the repo
 ElasticAnonymizer.export_anon_df(anon_docs, PATH_TO_YOUR_FOLDER)
 ```
 5. Optional - Export your anonymization states and trained Fast Text
-```{python}
+```python
 # if you don't pass a PATH_TO_YOUR_FOLDER, the function will use the default argument, which is the ./assets folder in the repo
 anon.export_anon_state(save_path=PATH_TO_YOUR_FOLDER)
 anon.export_trained_embedder(save_path=PATH_TO_YOUR_FOLDER)
@@ -97,7 +97,7 @@ anon.export_trained_embedder(save_path=PATH_TO_YOUR_FOLDER)
 If you want to use the Elastic Anonymizer as a plain dockerized package, just follow these steps:
 
 1. Clone the repository:
-```{git}
+```bash
 git clone https://github.com/Tobia905/elastic-anonymizer.git
 ```
 2. Move your documents into the ./data folder
@@ -105,7 +105,7 @@ git clone https://github.com/Tobia905/elastic-anonymizer.git
 3. Make sure you have Docker installed and running.
 
 4. Run:
-```{docker}
+```bash
 docker-compose up
 ```
 5. Go to: http://localhost:8888/tree and open the **usage.ipynb** notebook.
@@ -125,15 +125,15 @@ If you want to contribute to the project, feel free. The only thing we ask, is t
 1. Fork the repository.
 
 2. Clone the repository:
-```{git}
+```bash
 git clone https://github.com/<YourUserName>/elastic-anonymizer.git
 ```
 3. Move to the repo:
-```{bash}
+```bash
 cd /PATH_TO_REPO
 ```
 4. Create a new branch:
-```{git}
+```bash
 # for a feature
 git checkout -b feature/YOUR_FEATURE
 # for solving a bug
