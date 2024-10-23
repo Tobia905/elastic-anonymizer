@@ -14,7 +14,7 @@ Computationally speaking, the algorithm is designed to follow six steps:
 
 2. The recognized entities are, then, inserted back into the original corpus.
 3. A FastText model is trained on the new corpus.
-4. For each new entity that needs to be anonymized, a similarity space is built as follows: the semantic (cosine) and syntactic (Jaro) similarities between the new entities and the ones found in the corpus are computed and an anonymization region is defined in that space (for example, the square defined by $x=(.80, 1); y=(.80, 1)$)
+4. For each new entity that needs to be anonymized, a similarity space is built as follows: the semantic (cosine) and syntactic (Jaro) similarities between the new entities and the ones found in the corpus are computed and an anonymization region is defined in that space (for example, the square defined by x=(.80, 1); y=(.80, 1))
 5. A DBSCAN algorithm is used to spot all the entities belonging to the anonymization region.
 6. All the entities are anonymized using the same faking strategy. So, for example, if two entities are recognized in the text, let's say *"Meta Platform"* and *"Meta Platform Inc."*, and this two entities belong both to the same anonymization region, they'll be anonymized using the same fake entity.
 
