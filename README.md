@@ -126,7 +126,7 @@ If you want to contribute to the project, feel free. The only thing we ask, is t
 
 2. Clone the repository:
 ```{git}
-git clone https://github.com/Tobia905/elastic-anonymizer.git
+git clone https://github.com/<YourUserName>/elastic-anonymizer.git
 ```
 3. Move to the repo:
 ```{bash}
