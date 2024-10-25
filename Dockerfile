@@ -12,12 +12,9 @@ WORKDIR /home
 
 COPY . /home
 
-# RUN python -m pip install --upgrade "pip==23.0.1"
 RUN pip install --upgrade setuptools pip
 RUN pip cache purge
-# RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir -e .
-#--trusted-host pypi.org --trusted-host files.pythonhosted.org -e .
 RUN pip install jupyter
 
 # Expose the port for Jupyter Notebook
