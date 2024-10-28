@@ -129,19 +129,16 @@ class ElasticAnonymizer:
             for ent, func in zip(self.selectors, anon_steps)
         }
         # initialize the NER pipeline
-        if faking_locale == "it_IT":
-            self.ner_pipeline = pipeline(
-                ner_pipeline_name, 
-                model=ner_model or Config.ITA_NER_MODEL, 
-                aggregation_strategy="simple"
-            )
-
-        else:
-            self.ner_pipeline = pipeline(
-                ner_pipeline_name, 
-                model=ner_model or Config.ENG_NER_MODEL, 
-                aggregation_strategy="simple"
-            )
+        default_model = (
+            Config.ITA_NER_MODEL 
+            if faking_locale == "it_IT" 
+            else Config.ENG_NER_MODEL
+        )
+        self.ner_pipeline = pipeline(
+            ner_pipeline_name, 
+            model=ner_model or default_model, 
+            aggregation_strategy="simple"
+        )
 
         self.num_threads_anonimize = num_threads_anonimize
         # import the fast text model if a pre-trained version is available
