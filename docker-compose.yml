@@ -11,4 +11,5 @@ services:
       - ./notebooks:/home/
       - ./anonymizer:/home/anonymizer
       - ./data:/home/data
+      - ./data:/home/anonymized_docs
       - ./assets:/home/assets
