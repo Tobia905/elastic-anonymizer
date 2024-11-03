@@ -312,6 +312,7 @@ class ElasticAnonymizer:
         w2v_min_count: int = 2,
         w2v_window: int = 5,
         w2v_seed: int = 42,
+        hardcoded_entities: List[str] = Config.HARDCODED_TODROP,
         **w2v_kwargs
     ) -> pd.DataFrame:
         """
@@ -354,6 +355,7 @@ class ElasticAnonymizer:
                 w2v_min_count=w2v_min_count,
                 w2v_window=w2v_window,
                 w2v_seed=w2v_seed,
+                hardcoded_entities=hardcoded_entities,
                 **w2v_kwargs
             )
 
@@ -435,6 +437,7 @@ class ElasticAnonymizer:
         w2v_min_count: int = 2,
         w2v_window: int = 5,
         w2v_seed: int = 42,
+        hardcoded_entities: List[str] = Config.HARDCODED_TODROP,
         **w2v_kwargs
     ):
         """
@@ -510,7 +513,7 @@ class ElasticAnonymizer:
                 self.anon_state[row.words] = bf
 
         # drop the hardcoded entities
-        self.clean_anon_state_from_hardcoded_entities()
+        self.clean_anon_state_from_hardcoded_entities(hardcoded_entities=hardcoded_entities)
 
     def export_anon_state(self: Self, path: str = Config.ASSETS_PATH):
         with open((path / self.anon_state_name), "wb") as file:
@@ -528,7 +531,11 @@ class ElasticAnonymizer:
         filename = f"anonimized_docs_{get_current_time()}.csv"
         df.to_csv((Config.ANON_DOCS_PATH / filename).as_posix(), index=None)
 
-    def import_anon_state(self: Self, path: Union[Path, str] = Config.ASSETS_PATH):
+    def import_anon_state(
+        self: Self, 
+        path: Union[Path, str] = Config.ASSETS_PATH,
+        hardcoded_entities: List[str] = Config.HARDCODED_TODROP
+    ):
         path = ElasticAnonymizer._check_is_path(path)
         with open((path / self.anon_state_name), "rb") as file:
             self.anon_state = pickle.load(file)
@@ -536,7 +543,7 @@ class ElasticAnonymizer:
         with open((path / self.regex_anon_state_name), "rb") as file:
             self.anon_state_regex = pickle.load(file)
 
-        self.clean_anon_state_from_hardcoded_entities()
+        self.clean_anon_state_from_hardcoded_entities(hardcoded_entities=hardcoded_entities)
 
     @staticmethod
     def classify(similarities: pd.DataFrame) -> pd.DataFrame:
@@ -556,7 +563,7 @@ class ElasticAnonymizer:
         similarities["sem"] = MinMaxScaler().fit_transform(similarities["sem"].values[:, None])
         db = DBSCAN(eps=0.10, min_samples=10)
         # classification is unsupervised and done by selecting the outliers 
-        # spotted by the DB Scan algorithm.
+        # spotted by the DBSCAN algorithm.
         pred = db.fit_predict(similarities[["sem", "sint"]])
         similarities["clust"] = pred
         return similarities
@@ -574,11 +581,14 @@ class ElasticAnonymizer:
         save_path = ElasticAnonymizer._check_is_path(save_path)
         return self.anon_state_name in os.listdir(save_path)
     
-    def clean_anon_state_from_hardcoded_entities(self):
+    def clean_anon_state_from_hardcoded_entities(
+        self, 
+        hardcoded_entities: List[str] = Config.HARDCODED_TODROP
+    ):
         self.anon_state = {
             ent: replacer for ent, replacer in self.anon_state.items() 
             if (
-                ent not in Config.HARDCODED_TODROP and "##" not in ent
+                ent not in hardcoded_entities and "##" not in ent
             )
         }
 
