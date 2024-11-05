@@ -1,6 +1,7 @@
 import pickle
 import re
 import os
+from typing import Optional, Callable, Union, List, Dict, Tuple, Any
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -10,7 +11,6 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import MinMaxScaler
-from typing import Optional, Callable, Union, List, Dict, Tuple
 from typing_extensions import Self
 from presidio_anonymizer import AnonymizerEngine
 from presidio_analyzer.recognizer_result import RecognizerResult
@@ -225,7 +225,7 @@ class ElasticAnonymizer:
     # texts will be displayed when running the anonymization in parallel
     def _anonymize(
         self: Self, 
-        pipeline_results, 
+        pipeline_results: List[Dict[str, Union[str, int]]], 
         sentence: Document, 
         show_ner: bool = False
     ) -> pd.DataFrame:
@@ -313,7 +313,7 @@ class ElasticAnonymizer:
         w2v_window: int = 5,
         w2v_seed: int = 42,
         hardcoded_entities: List[str] = Config.HARDCODED_TODROP,
-        **w2v_kwargs
+        **w2v_kwargs: Any
     ) -> pd.DataFrame:
         """
         Applies the _anonymize method on multiple documents.
@@ -418,7 +418,7 @@ class ElasticAnonymizer:
 
         return " " + anon + " "
 
-    def initialize_anon_state(self, save_path: Union[Path, str] = Config.ASSETS_PATH):
+    def initialize_anon_state(self: Self, save_path: Union[Path, str] = Config.ASSETS_PATH):
         if self.is_saved_anon_state(save_path) and self.use_pretrained_anon_state:
             self.import_anon_state(path=save_path)
 
@@ -431,15 +431,15 @@ class ElasticAnonymizer:
         self.anon_state_regex = {}
 
     def populate_anon_state(
-        self, 
+        self: Self, 
         sentences: List[Document], 
         pipeline_results: List[Dict[str, Union[str, int]]],
         w2v_min_count: int = 2,
         w2v_window: int = 5,
         w2v_seed: int = 42,
         hardcoded_entities: List[str] = Config.HARDCODED_TODROP,
-        **w2v_kwargs
-    ):
+        **w2v_kwargs: Any
+    ) -> None:
         """
         Populates the anonymization state that stores the 
         given word and it's correspective faking.
